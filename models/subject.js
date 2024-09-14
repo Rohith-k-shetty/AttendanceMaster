@@ -1,6 +1,6 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/db");
-const Department = require("./departmentModel");
+const Department = require("./department");
 
 class Subject extends Model {}
 

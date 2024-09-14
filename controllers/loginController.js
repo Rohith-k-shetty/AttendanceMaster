@@ -1,10 +1,10 @@
 const sequelize = require("../config/db");
-const User = require("../models/userModel");
+const User = require("../models/user");
 const { generateToken } = require("../utils/functions");
 const bcrypt = require("bcrypt");
 const { userStatus } = require("../utils/constants");
-const formatResponse = require("../utils/response"); 
-const Department = require("../models/departmentModel");
+const formatResponse = require("../utils/response");
+const Department = require("../models/department");
 
 // Login function for the user
 const login = async (req, res) => {
@@ -39,13 +39,11 @@ const login = async (req, res) => {
       .json(formatResponse(200, "Login successful", true, { token }));
   } catch (error) {
     console.error("Login error:", error);
-    return res
-      .status(500)
-      .json(
-        formatResponse(500, "Internal server error", false, {
-          error: error.message,
-        })
-      );
+    return res.status(500).json(
+      formatResponse(500, "Internal server error", false, {
+        error: error.message,
+      })
+    );
   }
 };
 

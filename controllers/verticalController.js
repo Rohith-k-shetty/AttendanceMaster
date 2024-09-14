@@ -1,5 +1,5 @@
-const Department = require("../models/departmentModel");
-const Subject = require("../models/subjectModel");
+const Department = require("../models/department");
+const Subject = require("../models/subject");
 const formatResponse = require("../utils/response");
 const { userStatus } = require("../utils/constants");
 const { Op } = require("sequelize");

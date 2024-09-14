@@ -1,10 +1,11 @@
 // syncModels.js
 
 const sequelize = require("../config/db");
-const User = require("../models/userModel");
+const User = require("../models/user");
+const models = require("../models/index");
 
 // Define an array of all your models
-const models = [User];
+const model = [User];
 
 // Function to synchronize all models
 async function syncAllModels() {

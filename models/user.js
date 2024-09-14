@@ -1,7 +1,7 @@
 const { DataTypes, Model } = require("sequelize");
-const sequelize = require("../config/db");
-const Department = require("../models/departmentModel.js");
-const Year = require("./yearModal.js");
+const sequelize = require("../config/db.js");
+const Department = require("./department.js");
+const Year = require("./year.js");
 class User extends Model {}
 
 User.init(
@@ -25,7 +25,7 @@ User.init(
       allowNull: false,
     },
     role: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM("Teacher", "Student", "Admin", "SuperAdmin"),
       allowNull: false,
     },
     status: {

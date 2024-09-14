@@ -1,6 +1,6 @@
 const sequelize = require("../config/db");
 const { Op } = require("sequelize");
-const User = require("../models/userModel");
+const User = require("../models/user");
 const { hashPassword } = require("../utils/functions");
 const { userStatus } = require("../utils/constants");
 const formatResponse = require("../utils/response");
@@ -17,16 +17,16 @@ const createUser = async (req, res) => {
       email,
       PhotoUrl,
       phoneNo,
-      year,
+      yearId,
       parentPhone,
     } = req.body;
 
     // Validate required fields
-    if (!name || !username || !role || year) {
+    if (!name || !username || !role || !yearId) {
       return res
         .status(400)
         .json(
-          formatResponse(400, "Name, username, and role are required", false)
+          formatResponse(400, "Name, username, year and role  are required", false)
         );
     }
 
@@ -43,7 +43,7 @@ const createUser = async (req, res) => {
       email: email || null,
       PhotoUrl: PhotoUrl || null,
       phoneNo: phoneNo || null,
-      yearId: year || null,
+      yearId: yearId || null,
       parentPhone: parentPhone || null,
     });
 
@@ -67,11 +67,30 @@ const bulkCreateUsers = async (req, res) => {
     // Extract users from req.body
     const users = req.body;
 
+    // Extract all usernames from the incoming request
+    const usernames = users.map((user) => user.username);
+
+    // Check for duplicate usernames within the provided Excel data (req.body)
+    const duplicateUsernames = usernames.filter(
+      (username, index, arr) => arr.indexOf(username) !== index
+    );
+
+    // If there are duplicates within the incoming request, return an error
+    if (duplicateUsernames.length > 0) {
+      return res.status(400).json(
+        formatResponse(
+          400,
+          "Duplicate usernames found in the provided data",
+          false,
+          {
+            duplicates: [...new Set(duplicateUsernames)], // Return only unique duplicate usernames
+          }
+        )
+      );
+    }
+
     // Hash the password once
     const hashedPassword = await hashPassword("Welcome@123");
-
-    // Extract all usernames to check if they exist
-    const usernames = users.map((user) => user.username);
 
     // Fetch existing usernames in the database
     const existingUsers = await User.findAll({
@@ -99,17 +118,21 @@ const bulkCreateUsers = async (req, res) => {
         email: user.email || null,
         PhotoUrl: user.PhotoUrl || null,
         phoneNo: user.phoneNo || null,
-        yearId: user.year || null,
+        yearId: user.yearId || null,
         parentPhone: user.parentPhone || null,
       }));
 
     // Check if there are any new users to insert
     if (newUsers.length === 0) {
-      return res.status(400).json({
-        statusCode: 400,
-        message: "No new users to insert. All users already exist.",
-        success: false,
-      });
+      return res
+        .status(400)
+        .json(
+          formatResponse(
+            400,
+            "No new users to insert. All users already exist.",
+            false
+          )
+        );
     }
 
     // Batch process the insertion in parallel
@@ -130,23 +153,26 @@ const bulkCreateUsers = async (req, res) => {
     console.log(`${newUsers.length} users inserted successfully.`);
 
     // Return a success response
-    return res.status(201).json({
-      statusCode: 201,
-      message: `${newUsers.length} users created successfully`,
-      success: true,
-    });
+    return res
+      .status(201)
+      .json(
+        formatResponse(
+          201,
+          `${newUsers.length} users created successfully`,
+          true
+        )
+      );
   } catch (error) {
     // Rollback the transaction in case of an error
     await transaction.rollback();
     console.error("Error inserting users:", error);
 
     // Return an error response
-    return res.status(500).json({
-      statusCode: 500,
-      message: "Failed to create users",
-      success: false,
-      error: error.message,
-    });
+    return res.status(500).json(
+      formatResponse(500, "Failed to create users", false, {
+        error: error.message,
+      })
+    );
   }
 };
 
@@ -371,13 +397,13 @@ const getByNameOrPhone = async (req, res) => {
 };
 
 const searchUsersBySingleFields = async (req, res) => {
-  const { departmentId, year, status, role } = req.query;
+  const { departmentId, yearId, status, role } = req.query;
   try {
     // Build the where clause dynamically
     const whereClause = {};
     if (departmentId && departmentId !== "all")
       whereClause.departmentId = parseInt(departmentId);
-    if (year && year !== "all") whereClause.year = parseInt(year);
+    if (yearId && yearId !== "all") whereClause.yearId = parseInt(yearId);
     if (status && status !== "all") whereClause.status = status;
     if (role && role !== "all") whereClause.role = role;
     // Fetch users based on the dynamic where clause
@@ -403,7 +429,7 @@ const searchUsersBySingleFields = async (req, res) => {
 };
 
 const searchUsersByArrayFields = async (req, res) => {
-  const { departmentIds, year, statuses } = req.query;
+  const { departmentIds, yearId, statuses } = req.query;
 
   try {
     // Build the where clause dynamically
@@ -417,7 +443,7 @@ const searchUsersByArrayFields = async (req, res) => {
       whereClause.departmentId = { [Op.in]: departmentIdArray };
     }
 
-    if (year) whereClause.year = parseInt(year);
+    if (yearId) whereClause.yearId = parseInt(yearId);
 
     if (statuses) {
       // Split the statuses string into an array
