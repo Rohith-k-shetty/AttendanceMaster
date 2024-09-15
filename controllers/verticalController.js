@@ -94,6 +94,39 @@ const deleteDepartment = async (req, res) => {
     );
   }
 };
+const getDepartmentById = async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res
+      .status(400)
+      .json(formatResponse(400, "User ID is required", false));
+  }
+  try {
+    const department = await Department.findByPk(id);
+    if (!department) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Department not found", false));
+    }
+    return res
+      .status(200)
+      .json(
+        formatResponse(
+          200,
+          "Department retrived Successfully",
+          true,
+          department
+        )
+      );
+  } catch (error) {
+    console.error("Error while fetching departmnent:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to get department data", false, {
+        error: error.message,
+      })
+    );
+  }
+};
 
 // Controller for searching Departments by specific fields
 const searchDepartments = async (req, res) => {
@@ -280,6 +313,37 @@ const deleteSubject = async (req, res) => {
   }
 };
 
+//request to get a single user
+const getSubjectById = async (req, res) => {
+  const { id } = req.params; // User ID from URL parameters
+
+  if (!id) {
+    return res
+      .status(400)
+      .json(formatResponse(400, "User ID is required", false));
+  }
+  try {
+    const subject = await Subject.findByPk(id);
+    if (!subject) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Subject not found", false));
+    }
+    return res
+      .status(200)
+      .json(
+        formatResponse(200, "Subject retrived Successfully", true, subject)
+      );
+  } catch (error) {
+    console.error("Error while fetching subject:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to get subject data", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
 const searchSubject = async (req, res) => {
   const { departmentId, status, subjectId } = req.query;
   try {
@@ -381,4 +445,6 @@ module.exports = {
   deleteSubject,
   searchSubject,
   searchSubjectsByRegx,
+  getSubjectById,
+  getDepartmentById,
 };

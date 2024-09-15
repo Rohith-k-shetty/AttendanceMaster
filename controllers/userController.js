@@ -26,7 +26,11 @@ const createUser = async (req, res) => {
       return res
         .status(400)
         .json(
-          formatResponse(400, "Name, username, year and role  are required", false)
+          formatResponse(
+            400,
+            "Name, username, year and role  are required",
+            false
+          )
         );
     }
 
@@ -300,7 +304,7 @@ const activateUser = async (req, res) => {
     return res
       .status(200)
       .json(
-        formatResponse(200, "User marked as deleted successfully", true, user)
+        formatResponse(200, "User marked as Activated successfully", true, user)
       );
   } catch (error) {
     console.error("Error deleting user:", error);
@@ -333,10 +337,10 @@ const getUser = async (req, res) => {
     return res
       .status(200)
       .json(
-        formatResponse(200, "User marked as deleted successfully", true, user)
+        formatResponse(200, "fetched user Details successfully", true, user)
       );
   } catch (error) {
-    console.error("Error deleting user:", error);
+    console.error("Error while fetching user:", error);
     return res.status(500).json(
       formatResponse(500, "Failed to get user data", false, {
         error: error.message,

@@ -11,6 +11,8 @@ const {
   deleteSubject,
   searchSubject,
   searchSubjectsByRegx,
+  getDepartmentById,
+  getSubjectById,
 } = require("../controllers/verticalController");
 const { verifyToken } = require("../middleware/tokenMiddleware");
 
@@ -21,15 +23,16 @@ router.delete("/department/:id", verifyToken,deleteDepartment);
 router.put("/department/:id",verifyToken,updateDepartment);
 router.get("/department/search", verifyToken, searchDepartments);
 router.get("/department/searchByRegx", verifyToken, searchDepartmentsByRegex);
+router.get("/department/getById/:id", verifyToken, getDepartmentById);
 
 
 
-//route for loging the user
-// router.post("/semister", verifyToken, createSemister);
+//subject routes
 router.post("/subject", verifyToken, createSubject);
 router.delete("/subject/:id", verifyToken, deleteSubject);
 router.put("/subject/:id",verifyToken, updateSubject);
 router.get("/subject/search" ,verifyToken, searchSubject);
 router.get("/subject/searchByregx",verifyToken,searchSubjectsByRegx);
+router.get("/subject/getById/:id", verifyToken, getSubjectById);
 
 module.exports = router;

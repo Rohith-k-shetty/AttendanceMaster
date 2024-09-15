@@ -12,6 +12,9 @@ const {
   CompleteAttendanceBook,
   removeStudentFromAttendanceBook,
   removeTeacherFromAttendanceBook,
+  searchAttendanceBook,
+  searchAttendanceBookByRegx,
+  getAttendanceBookById,
 } = require("../controllers/attendanceBookController");
 
 //post route for attendance book
@@ -31,6 +34,8 @@ router.put("/activate/:id", verifyToken, ActivateAttendanceBook);
 router.put("/complete/:id", verifyToken, CompleteAttendanceBook);
 
 //get opration for attendance book
-// router.get()
+router.get("/search", verifyToken, searchAttendanceBook);
+router.get("/searchByRegx", verifyToken, searchAttendanceBookByRegx);
+router.get("/getById/:id", verifyToken, getAttendanceBookById);
 
 module.exports = router;

@@ -399,16 +399,13 @@ const addUsersToAttendanceBook = async (req, res) => {
   } catch (error) {
     await transaction.rollback();
     console.error("Error adding users to Attendance Book:", error);
-    return res
-      .status(500)
-      .json(
-        formatResponse(500, "Failed to add users to Attendance Book", false, {
-          error: error.message,
-        })
-      );
+    return res.status(500).json(
+      formatResponse(500, "Failed to add users to Attendance Book", false, {
+        error: error.message,
+      })
+    );
   }
 };
-
 
 const removeStudentFromAttendanceBook = async (req, res) => {
   const { attendanceBookId, studentId } = req.query;
@@ -507,6 +504,148 @@ const removeTeacherFromAttendanceBook = async (req, res) => {
     );
   }
 };
+const searchAttendanceBook = async (req, res) => {
+  const { departmentId, status, subjectId, yearId } = req.query;
+  try {
+    const whereClause = {};
+    if (departmentId) {
+      whereClause.departmentId = departmentId;
+    }
+    if (yearId) {
+      whereClause.yearId = yearId;
+    }
+    if (status) {
+      whereClause.status = status;
+    }
+    if (subjectId) {
+      whereClause.subjectId = subjectId;
+    }
+    // Find attendance books with the dynamic where clause
+    const attendanceBooks = await AttendanceBook.findAll({
+      where: whereClause,
+      include: [
+        { model: User, as: "teachers" },
+        { model: User, as: "students" },
+      ],
+    });
+    if (!attendanceBooks.length) {
+      return res
+        .status(404)
+        .json(
+          formatResponse(
+            404,
+            "No attendance books found matching the provided criteria",
+            false
+          )
+        );
+    }
+    return res
+      .status(200)
+      .json(
+        formatResponse(
+          200,
+          "Attendance books retrieved successfully",
+          true,
+          attendanceBooks
+        )
+      );
+  } catch (error) {
+    console.error("Error fetching attendance books:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to fetch attendance books", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+const searchAttendanceBookByRegx = async (req, res) => {
+  const { departmentId, searchTerm } = req.query;
+  try {
+    const whereCondition = {};
+    if (departmentId) {
+      whereCondition.departmentId = parseInt(departmentId, 10);
+    }
+    if (searchTerm) {
+      whereCondition[Op.or] = [
+        { bookName: { [Op.iLike]: `%${searchTerm}%` } },
+        { bookCode: { [Op.iLike]: `%${searchTerm}%` } },
+      ];
+    }
+
+    const attendanceBooks = await AttendanceBook.findAll({
+      where: whereCondition,
+      include: [
+        { model: User, as: "teachers" },
+        { model: User, as: "students" },
+      ],
+    });
+
+    if (!attendanceBooks.length) {
+      return res
+        .status(404)
+        .json(
+          formatResponse(
+            404,
+            "No attendance books found matching the search term",
+            false
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(
+        formatResponse(
+          200,
+          "Attendance books retrieved successfully",
+          true,
+          attendanceBooks
+        )
+      );
+  } catch (error) {
+    console.error("Error searching attendance books:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to search attendance books", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+const getAttendanceBookById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const attendanceBook = await AttendanceBook.findByPk(id, {
+      include: [
+        { model: User, as: "teachers" },
+        { model: User, as: "students" },
+      ],
+    });
+
+    if (!attendanceBook) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Attendance Book not found", false));
+    }
+
+    return res
+      .status(200)
+      .json(
+        formatResponse(
+          200,
+          "Attendance Book retrieved successfully",
+          true,
+          attendanceBook
+        )
+      );
+  } catch (error) {
+    console.error("Error fetching attendance book by ID:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to fetch attendance book", false, {
+        error: error.message,
+      })
+    );
+  }
+};
 
 module.exports = {
   createAttendanceBook,
@@ -519,4 +658,7 @@ module.exports = {
   CompleteAttendanceBook,
   removeStudentFromAttendanceBook,
   removeTeacherFromAttendanceBook,
+  searchAttendanceBook,
+  searchAttendanceBookByRegx,
+  getAttendanceBookById,
 };
