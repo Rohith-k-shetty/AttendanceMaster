@@ -5,9 +5,7 @@ const dotenv = require("dotenv");
 const userRoutes = require("./routes/userRoutes");
 const loginRoutes = require("./routes/loginRoute");
 const verticalRoutes = require("./routes/verticalRoute");
-const bookRoutes = require("./routes/bookRoute");
-const attendanceRoutes = require("./routes/recordRoute");
-const studentBookRoutes = require("./routes/studentBookRoute");
+const attendanceBookRoutes = require("./routes/attendanceBookRoute")
 const cors = require("cors");
 const syncAllModels = require("./config/syncModel");
 
@@ -25,7 +23,7 @@ app.use(express.json());
 app.use("/users", userRoutes);
 app.use("/login", loginRoutes);
 app.use("/vertical", verticalRoutes);
-// app.use("/book", bookRoutes);
+app.use("/attendanceBook", attendanceBookRoutes);
 // app.use("/attendance", attendanceRoutes);
 // app.use("/studentBook", studentBookRoutes);
 

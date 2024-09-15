@@ -1,6 +1,6 @@
 // functions.js
 const { Sequelize } = require("sequelize");
-const User = require("../models/userModel");
+const User = require("../models/user");
 const { userRoles, userStatus } = require("../utils/constants");
 const formatResponse = require("../utils/response");
 
