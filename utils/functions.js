@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
+const Session = require("../models/Session");
+const Year = require("../models/year");
 
 //Function to get the hashed password
 async function hashPassword(password) {
@@ -22,7 +24,7 @@ async function generateUserId() {
 const generateToken = (user) => {
   const token = jwt.sign(
     {
-      user
+      user,
     },
     process.env.JWT_SECRET,
     { expiresIn: "10h", algorithm: "HS256" }
@@ -30,4 +32,39 @@ const generateToken = (user) => {
   return token;
 };
 
-module.exports = { hashPassword, generateUserId, generateToken };
+const prepopulateSessions = async () => {
+  const sessions = [
+    "Session 1",
+    "Session 2",
+    "Session 3",
+    "Session 4",
+    "Session 5",
+    "Session 6",
+  ];
+  for (const sessionName of sessions) {
+    await Session.findOrCreate({ where: { name: sessionName } });
+  }
+};
+
+const prepopulateYear = async () => {
+  const sessions = [
+    "I Year",
+    "II Year",
+    "III Year",
+    "IV Year",
+    "V Year",
+    "Passout",
+  ];
+  for (const sessionName of sessions) {
+    await Year.findOrCreate({ where: { year: sessionName } });
+  }
+};
+
+prepopulateSessions();
+prepopulateYear();
+
+module.exports = {
+  hashPassword,
+  generateUserId,
+  generateToken,
+};

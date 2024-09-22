@@ -5,7 +5,9 @@ const dotenv = require("dotenv");
 const userRoutes = require("./routes/userRoutes");
 const loginRoutes = require("./routes/loginRoute");
 const verticalRoutes = require("./routes/verticalRoute");
-const attendanceBookRoutes = require("./routes/attendanceBookRoute")
+const attendanceBookRoutes = require("./routes/attendanceBookRoute");
+const attendanceRecordRoute = require("./routes/attendanceRecordRoute");
+const attendanceSessionRoute = require("./routes/attendanceSessionRoute")
 const cors = require("cors");
 const syncAllModels = require("./config/syncModel");
 
@@ -24,8 +26,9 @@ app.use("/users", userRoutes);
 app.use("/login", loginRoutes);
 app.use("/vertical", verticalRoutes);
 app.use("/attendanceBook", attendanceBookRoutes);
-// app.use("/attendance", attendanceRoutes);
-// app.use("/studentBook", studentBookRoutes);
+app.use("/attendanceRecord", attendanceRecordRoute);
+app.use("/attendanceSession",attendanceSessionRoute);
+
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
