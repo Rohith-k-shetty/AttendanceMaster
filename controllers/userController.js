@@ -386,7 +386,6 @@ const getByNameOrPhone = async (req, res) => {
           )
         );
     }
-
     return res
       .status(200)
       .json(formatResponse(200, "Users retrieved successfully", true, users));
@@ -401,7 +400,7 @@ const getByNameOrPhone = async (req, res) => {
 };
 
 const searchUsersBySingleFields = async (req, res) => {
-  const { departmentId, yearId, status, role } = req.query;
+  const { departmentId, yearId, status, role, userId } = req.query;
   try {
     // Build the where clause dynamically
     const whereClause = {};
@@ -410,6 +409,7 @@ const searchUsersBySingleFields = async (req, res) => {
     if (yearId && yearId !== "all") whereClause.yearId = parseInt(yearId);
     if (status && status !== "all") whereClause.status = status;
     if (role && role !== "all") whereClause.role = role;
+    if (userId && userId !== "all") whereClause.id = userId;
     // Fetch users based on the dynamic where clause
     const users = await User.findAll({
       where: whereClause,
