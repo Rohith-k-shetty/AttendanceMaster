@@ -1,9 +1,9 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/db");
 
-class Department extends Model {}
+class Course extends Model {}
 
-Department.init(
+Course.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -11,11 +11,11 @@ Department.init(
       unique: true,
       autoIncrement: true,
     },
-    departmentName: {
+    courseName: {
       type: DataTypes.STRING,
       unique: true,
     },
-    departmentCode: {
+    courseCode: {
       type: DataTypes.STRING,
       unique: true,
     },
@@ -27,9 +27,9 @@ Department.init(
 
   {
     sequelize,
-    modelName: "Department",
-    tableName: "tblDepartments",
+    modelName: "Course",
+    tableName: "tblCourses",
   }
 );
 
-module.exports = Department;
+module.exports = Course;

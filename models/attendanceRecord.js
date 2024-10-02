@@ -2,6 +2,7 @@ const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/db");
 const AttendanceBook = require("./AttendanceBook");
 const User = require("./user");
+const Session = require("./Session");
 
 class AttendanceRecord extends Model {}
 
@@ -15,34 +16,34 @@ AttendanceRecord.init(
     attendanceBookId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references:{
-        model:AttendanceBook,
-        key:"id"
-      }
+      references: {
+        model: AttendanceBook,
+        key: "id",
+      },
     },
     studentId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references:{
-        model:User,
-        key:"id"
-      }
+      references: {
+        model: User,
+        key: "id",
+      },
     },
     date: {
       type: DataTypes.DATEONLY,
       allowNull: false,
     },
-    totalSessions: {
+    sessionId: {
       type: DataTypes.INTEGER,
-      defaultValue: 0,
+      allowNull: false,
+      references: {
+        model: Session,
+        key: "id",
+      },
     },
-    presentSessions: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
-    },
-    absentSessions: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
+    status: {
+      type: DataTypes.ENUM("Present", "Absent"),
+      allowNull: false,
     },
   },
   {
@@ -50,12 +51,12 @@ AttendanceRecord.init(
     modelName: "AttendanceRecord",
     tableName: "tblAttendanceRecords",
     timestamps: true,
-    // Add unique constraint to prevent duplicate records for the same student, book, and date
-    uniqueKeys: {
-      studentBookDateUnique: {
-        fields: ["attendanceBookId", "studentId", "date"],
+    indexes: [
+      {
+        unique: true,
+        fields: ["attendanceBookId", "studentId", "date", "sessionId"],
       },
-    },
+    ],
   }
 );
 

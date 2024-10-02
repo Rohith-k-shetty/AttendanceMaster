@@ -1,67 +1,75 @@
 const sequelize = require("../config/db");
 const { Op } = require("sequelize");
-const { AttendanceRecord, AttendanceSession } = require("../models");
+const { AttendanceRecord } = require("../models");
 const { attendanceStatus } = require("../utils/constants");
 const formatResponse = require("../utils/response");
 
 const createAttendanceRecords = async (req, res) => {
-  const attendanceDataArray = req.body;
-  const transaction = await sequelize.transaction();
-  try {
-    const attendanceRecordsData = attendanceDataArray.map((item) => {
-      const totalSessions = item.sessions.length;
-      const presentSessions = item.sessions.filter(
-        (session) => session.status === attendanceStatus[0]
-      ).length;
-      const absentSessions = totalSessions - presentSessions;
+  const attendanceDataArray = req.body; // Get attendance records from the request body
+  const transaction = await sequelize.transaction(); // Start a new transaction
 
-      return {
-        attendanceBookId: item.attendanceBookId,
-        studentId: item.studentId,
-        date: item.date,
-        totalSessions,
-        presentSessions,
-        absentSessions,
-      };
-    });
-    const attendanceRecords = await AttendanceRecord.bulkCreate(
-      attendanceRecordsData,
-      {
-        transaction,
-        returning: true,
-        updateOnDuplicate: [
-          "totalSessions",
-          "presentSessions",
-          "absentSessions",
-        ],
-      }
+  try {
+    // Prepare attendance records for bulk creation
+    const recordsToCreate = attendanceDataArray.map(
+      ({ attendanceBookId, studentId, date, sessionId, status }) => ({
+        attendanceBookId,
+        studentId,
+        date,
+        sessionId,
+        status,
+      })
     );
-    const attendanceSessionsData = [];
-    attendanceDataArray.forEach((item, index) => {
-      const recordId = attendanceRecords[index].id;
-      item.sessions.forEach((session) => {
-        attendanceSessionsData.push({
-          attendanceRecordId: recordId,
-          sessionId: session.sessionId,
-          status: session.status,
-        });
-      });
+
+    // Check for existing records to avoid duplicates
+    const existingRecords = await AttendanceRecord.findAll({
+      where: {
+        [Op.or]: recordsToCreate.map(
+          ({ attendanceBookId, studentId, date, sessionId }) => ({
+            attendanceBookId,
+            studentId,
+            date,
+            sessionId,
+          })
+        ),
+      },
+      transaction,
     });
-    // Step 4: Insert AttendanceSession records in batches (for optimization)
-    if (attendanceSessionsData.length > 0) {
-      await AttendanceSession.bulkCreate(attendanceSessionsData, {
-        transaction,
-        ignoreDuplicates: true,
-      });
+
+    // Create a set of existing record identifiers for quick lookup
+    const existingIds = new Set(
+      existingRecords.map(
+        ({ attendanceBookId, studentId, date, sessionId }) =>
+          `${attendanceBookId}-${studentId}-${date}-${sessionId}`
+      )
+    );
+
+    // Filter out duplicates from recordsToCreate
+    const uniqueRecords = recordsToCreate.filter(
+      ({ attendanceBookId, studentId, date, sessionId }) =>
+        !existingIds.has(
+          `${attendanceBookId}-${studentId}-${date}-${sessionId}`
+        )
+    );
+
+    // Bulk create unique attendance records if any exist
+    if (uniqueRecords.length) {
+      await AttendanceRecord.bulkCreate(uniqueRecords, { transaction });
     }
-    await transaction.commit();
+
+    await transaction.commit(); // Commit transaction
     return res
       .status(201)
       .json(
-        formatResponse(201, "Attendance records created successfully", true)
+        formatResponse(
+          201,
+          "Attendance records created successfully",
+          true,
+          uniqueRecords,
+          existingRecords.length ? existingRecords : null
+        )
       );
   } catch (error) {
-    if (transaction) await transaction.rollback();
+    await transaction.rollback(); // Rollback transaction in case of error
     console.error("Error creating attendance records:", error);
     return res.status(500).json(
       formatResponse(500, "Failed to create attendance records", false, {
@@ -87,9 +95,8 @@ const getAttendanceRecords = async (req, res) => {
       where: { attendanceBookId },
       include: [
         {
-          model: AttendanceSession,
-          as: "sessions",
-          attributes: ["sessionId", "status"], // Include the relevant session data
+          model: Session,
+          as: "session",
         },
       ],
     };
@@ -117,7 +124,61 @@ const getAttendanceRecords = async (req, res) => {
   }
 };
 
+const updateAttendanceRecord = async (req, res) => {
+  const { attendanceRecordId, status } = req.query; // Get attendance record ID from the request
+
+  // Validate status input
+  if (!status || ![attendanceStatus[0], attendanceStatus[1]].includes(status)) {
+    return res
+      .status(400)
+      .json(
+        formatResponse(
+          400,
+          "Invalid status value. Status must be 'Present' or 'Absent'.",
+          false
+        )
+      );
+  }
+
+  try {
+    // Find the attendance record by ID
+    const attendanceRecord = await AttendanceRecord.findByPk(
+      attendanceRecordId
+    );
+
+    // If record not found, return a 404 error
+    if (!attendanceRecord) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Attendance record not found.", false));
+    }
+
+    // Update the status of the attendance record
+    attendanceRecord.status = status;
+    await attendanceRecord.save(); // Save the updated record
+
+    return res
+      .status(200)
+      .json(
+        formatResponse(
+          200,
+          "Attendance record updated successfully.",
+          true,
+          attendanceRecord
+        )
+      );
+  } catch (error) {
+    console.error("Error updating attendance record:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to update attendance record.", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
 module.exports = {
   createAttendanceRecords,
   getAttendanceRecords,
+  updateAttendanceRecord,
 };

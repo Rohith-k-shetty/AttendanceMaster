@@ -434,11 +434,219 @@ const searchSubjectsByRegx = async (req, res) => {
   }
 };
 
+// Create a new course
+const createCourse = async (req, res) => {
+  const { courseName, courseCode } = req.body;
+  try {
+    // Convert courseCode to uppercase
+    const formattedCourseCode = courseCode.toUpperCase();
+
+    // Check if the course already exists
+    const existingCourse = await Course.findOne({
+      where: { courseCode: formattedCourseCode },
+    });
+    // If the course exists, return a response
+    if (existingCourse) {
+      return res
+        .status(400)
+        .json(formatResponse(400, "Course already exists", false));
+    }
+
+    // Create a new course with uppercase courseCode
+    const course = await Course.create({
+      courseName,
+      courseCode: formattedCourseCode,
+    });
+
+    // Return success response
+    return res
+      .status(201)
+      .json(formatResponse(201, "Course created successfully", true, course));
+  } catch (error) {
+    console.error("Error creating course:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to create course", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
+// Update the status of a course (activate)
+const updateCourse = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const courseId = parseInt(id);
+    const course = await Course.findByPk(courseId);
+    if (!course) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Course not found", false));
+    }
+
+    // Update the course status (activate it)
+    await course.update({ status: "Active" });
+    return res
+      .status(200)
+      .json(formatResponse(200, "Course activated successfully", true));
+  } catch (error) {
+    console.error("Error updating course:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to update course", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
+// Delete a course (soft delete by setting status to Inactive)
+const deleteCourse = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const courseId = parseInt(id);
+    const course = await Course.findByPk(courseId);
+    if (!course) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Course not found", false));
+    }
+
+    // Soft delete by setting status to "Inactive"
+    await course.update({ status: "Inactive" });
+    return res
+      .status(200)
+      .json(
+        formatResponse(
+          200,
+          "Course deleted (status set to Inactive) successfully",
+          true
+        )
+      );
+  } catch (error) {
+    console.error("Error deleting course:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to delete course", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
+// Retrieve course by ID
+const getCourseById = async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res
+      .status(400)
+      .json(formatResponse(400, "Course ID is required", false));
+  }
+  try {
+    const course = await Course.findByPk(id);
+    if (!course) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Course not found", false));
+    }
+    return res
+      .status(200)
+      .json(formatResponse(200, "Course retrieved successfully", true, course));
+  } catch (error) {
+    console.error("Error fetching course:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to get course data", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
+// Search for courses based on query parameters
+const searchCourses = async (req, res) => {
+  try {
+    const { courseName, courseCode, status } = req.query;
+    // Construct the where condition dynamically based on provided query params
+    const whereCondition = {};
+    if (courseName) whereCondition.courseName = courseName;
+    if (courseCode) whereCondition.courseCode = courseCode;
+    if (status) whereCondition.status = status;
+
+    const courses = await Course.findAll({ where: whereCondition });
+    if (!courses.length) {
+      return res
+        .status(404)
+        .json(
+          formatResponse(404, "No courses found matching the criteria", false)
+        );
+    }
+
+    return res
+      .status(200)
+      .json(
+        formatResponse(200, "Courses retrieved successfully", true, courses)
+      );
+  } catch (error) {
+    console.error("Error searching courses:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to search courses", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
+// Search for courses by a search term using regex
+const searchCoursesByRegex = async (req, res) => {
+  try {
+    const { searchTerm, status } = req.query;
+
+    // Construct the where condition dynamically based on searchTerm and status
+    const whereCondition = {};
+
+    if (status) {
+      whereCondition.status = status; // Filter by status
+    }
+
+    if (searchTerm) {
+      whereCondition[Op.or] = [
+        { courseName: { [Op.iLike]: `%${searchTerm}%` } }, // Case-insensitive match
+        { courseCode: { [Op.iLike]: `%${searchTerm}%` } },
+      ];
+    }
+
+    const courses = await Course.findAll({ where: whereCondition });
+
+    if (!courses.length) {
+      return res
+        .status(404)
+        .json(
+          formatResponse(
+            404,
+            "No courses found matching the search term",
+            false
+          )
+        );
+    }
+    return res
+      .status(200)
+      .json(
+        formatResponse(200, "Courses retrieved successfully", true, courses)
+      );
+  } catch (error) {
+    console.error("Error searching courses:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to search courses", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
 module.exports = {
   createDepartment,
   deleteDepartment,
   updateDepartment,
   searchDepartments,
+  getDepartmentById,
   searchDepartmentsByRegex,
   createSubject,
   updateSubject,
@@ -446,5 +654,10 @@ module.exports = {
   searchSubject,
   searchSubjectsByRegx,
   getSubjectById,
-  getDepartmentById,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+  getCourseById,
+  searchCourses,
+  searchCoursesByRegex,
 };

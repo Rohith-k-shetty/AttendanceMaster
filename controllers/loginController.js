@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const { userStatus } = require("../utils/constants");
 const formatResponse = require("../utils/response");
 const Department = require("../models/department");
+const Course = require("../models/course");
 
 // Login function for the user
 const login = async (req, res) => {
@@ -17,7 +18,10 @@ const login = async (req, res) => {
         username: username,
         status: userStatus[0],
       },
-      include: [{ model: Department, as: "department" }],
+      include: [
+        { model: Department, as: "department" },
+        { model: Course, as: "course" },
+      ],
     });
 
     if (!user) {

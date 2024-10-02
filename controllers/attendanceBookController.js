@@ -7,6 +7,7 @@ const AttendanceBook = require("../models/AttendanceBook");
 const Subject = require("../models/subject");
 const Department = require("../models/department");
 const { AttendanceBookStudent, AttendanceBookTeacher } = require("../models");
+const Course = require("../models/course");
 
 //create a attendance book
 const createAttendanceBook = async (req, res) => {
@@ -16,6 +17,7 @@ const createAttendanceBook = async (req, res) => {
     bookType,
     subjectId,
     departmentId,
+    courseId,
     startDate,
     endDate,
     createdBy,
@@ -35,6 +37,15 @@ const createAttendanceBook = async (req, res) => {
         .json(formatResponse(400, "Invalid creator (User) ID", false));
     }
     // Optional: Validate department if departmentId is provided
+    if (courseId) {
+      const course = await Course.findByPk(courseId);
+      if (!course) {
+        return res
+          .status(400)
+          .json(formatResponse(400, "Invalid Course ID", false));
+      }
+    }
+    // Optional: Validate department if departmentId is provided
     if (departmentId) {
       const department = await Department.findByPk(departmentId);
       if (!department) {
@@ -43,6 +54,7 @@ const createAttendanceBook = async (req, res) => {
           .json(formatResponse(400, "Invalid department ID", false));
       }
     }
+
     // Create AttendanceBook
     const attendanceBook = await AttendanceBook.create({
       bookName,
@@ -50,6 +62,7 @@ const createAttendanceBook = async (req, res) => {
       bookType,
       subjectId,
       departmentId,
+      courseId,
       startDate,
       endDate,
       createdBy,
@@ -505,11 +518,14 @@ const removeTeacherFromAttendanceBook = async (req, res) => {
   }
 };
 const searchAttendanceBook = async (req, res) => {
-  const { departmentId, status, subjectId, yearId } = req.query;
+  const { departmentId, courseId, status, subjectId, yearId } = req.query;
   try {
     const whereClause = {};
     if (departmentId) {
       whereClause.departmentId = departmentId;
+    }
+    if (courseId) {
+      whereClause.courseId = courseId;
     }
     if (yearId) {
       whereClause.yearId = yearId;
@@ -559,11 +575,14 @@ const searchAttendanceBook = async (req, res) => {
   }
 };
 const searchAttendanceBookByRegx = async (req, res) => {
-  const { departmentId, searchTerm } = req.query;
+  const { departmentId, courseId, searchTerm } = req.query;
   try {
     const whereCondition = {};
     if (departmentId) {
       whereCondition.departmentId = parseInt(departmentId, 10);
+    }
+    if (courseId) {
+      whereCondition.courseId = parseInt(courseId, 10);
     }
     if (searchTerm) {
       whereCondition[Op.or] = [

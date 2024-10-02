@@ -2,8 +2,6 @@ const AttendanceBook = require("./AttendanceBook");
 const AttendanceBookStudent = require("./AttendanceBookStudent");
 const AttendanceBookTeacher = require("./AttendanceBookTeacher");
 const AttendanceRecord = require("./attendanceRecord");
-const AttendanceSession = require("./attendanceSession");
-const Session = require("./Session");
 const User = require("./user");
 
 // Many-to-many relationship for teachers
@@ -36,26 +34,26 @@ User.belongsToMany(AttendanceBook, {
   otherKey: "attendanceBookId", // references attendanceBookId in AttendanceBookStudent
 });
 
-// One-to-many relationship between AttendanceRecord and AttendanceSession
-AttendanceRecord.hasMany(AttendanceSession, {
-  foreignKey: "attendanceRecordId", // foreign key in AttendanceSession
-  as: "sessions",
+// One-to-Many relationship between AttendanceBook and AttendanceRecord
+AttendanceBook.hasMany(AttendanceRecord, {
+  foreignKey: "attendanceBookId",
+  as: "attendanceRecords", // Alias for access in queries
 });
 
-AttendanceSession.belongsTo(AttendanceRecord, {
-  foreignKey: "attendanceRecordId", // foreign key in AttendanceSession
-  as: "attendanceRecord",
+AttendanceRecord.belongsTo(AttendanceBook, {
+  foreignKey: "attendanceBookId",
+  as: "attendanceBook", // Alias for access in queries
 });
 
-// One-to-many relationship between Session and AttendanceSession
-Session.hasMany(AttendanceSession, {
-  foreignKey: "sessionId", // foreign key in AttendanceSession
-  as: "attendanceSessions",
+// One-to-Many relationship between User (Student) and AttendanceRecord
+User.hasMany(AttendanceRecord, {
+  foreignKey: "studentId",
+  as: "attendanceRecords", // Alias for access in queries
 });
 
-AttendanceSession.belongsTo(Session, {
-  foreignKey: "sessionId", // foreign key in AttendanceSession
-  as: "session",
+AttendanceRecord.belongsTo(User, {
+  foreignKey: "studentId",
+  as: "student", // Alias for access in queries
 });
 
 module.exports = {
@@ -63,7 +61,5 @@ module.exports = {
   AttendanceBookTeacher,
   AttendanceBookStudent,
   AttendanceRecord,
-  AttendanceSession,
-  Session,
   User,
 };

@@ -7,7 +7,6 @@ const loginRoutes = require("./routes/loginRoute");
 const verticalRoutes = require("./routes/verticalRoute");
 const attendanceBookRoutes = require("./routes/attendanceBookRoute");
 const attendanceRecordRoute = require("./routes/attendanceRecordRoute");
-const attendanceSessionRoute = require("./routes/attendanceSessionRoute")
 const cors = require("cors");
 const syncAllModels = require("./config/syncModel");
 
@@ -22,13 +21,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Using userRoutes
-app.use("/users", userRoutes);
-app.use("/login", loginRoutes);
-app.use("/vertical", verticalRoutes);
-app.use("/attendanceBook", attendanceBookRoutes);
-app.use("/attendanceRecord", attendanceRecordRoute);
-app.use("/attendanceSession",attendanceSessionRoute);
-
+app.use("/api/users", userRoutes);
+app.use("/api/login", loginRoutes);
+app.use("/api/vertical", verticalRoutes);
+app.use("/api/attendanceBook", attendanceBookRoutes);
+app.use("/api/attendanceRecord", attendanceRecordRoute);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

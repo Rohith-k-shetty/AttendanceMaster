@@ -18,6 +18,8 @@ const createUser = async (req, res) => {
       PhotoUrl,
       phoneNo,
       yearId,
+      courseId,
+      gender,
       parentPhone,
     } = req.body;
 
@@ -44,6 +46,8 @@ const createUser = async (req, res) => {
       role,
       status: userStatus[0],
       departmentId: departmentId || null,
+      courseId: courseId || null,
+      gender: gender || null,
       email: email || null,
       PhotoUrl: PhotoUrl || null,
       phoneNo: phoneNo || null,
@@ -119,6 +123,8 @@ const bulkCreateUsers = async (req, res) => {
         password: hashedPassword,
         status: "Active",
         departmentId: user.departmentId || null,
+        courseId: user.courseId || null,
+        gender: user.gender || null,
         email: user.email || null,
         PhotoUrl: user.PhotoUrl || null,
         phoneNo: user.phoneNo || null,
@@ -352,13 +358,16 @@ const getUser = async (req, res) => {
 // Controller for searching by optional username, phone, or name
 const getByNameOrPhone = async (req, res) => {
   try {
-    const { departmentId, searchTerm } = req.query; // extract departmentId and searchTerm from query params
+    const { departmentId, courseId, searchTerm } = req.query; // extract departmentId and searchTerm from query params
 
     // Construct the where condition dynamically based on the presence of departmentId and search term
     const whereCondition = {};
 
     if (departmentId) {
       whereCondition.departmentId = parseInt(departmentId); // Ensure departmentId is an integer
+    }
+    if (courseId) {
+      whereCondition.courseId = parseInt(courseId); // Ensure departmentId is an integer
     }
 
     if (searchTerm) {
@@ -400,12 +409,14 @@ const getByNameOrPhone = async (req, res) => {
 };
 
 const searchUsersBySingleFields = async (req, res) => {
-  const { departmentId, yearId, status, role, userId } = req.query;
+  const { departmentId, courseId, yearId, status, role, userId } = req.query;
   try {
     // Build the where clause dynamically
     const whereClause = {};
     if (departmentId && departmentId !== "all")
       whereClause.departmentId = parseInt(departmentId);
+    if (courseId && departmentId !== "all")
+      whereClause.courseId = parseInt(courseId);
     if (yearId && yearId !== "all") whereClause.yearId = parseInt(yearId);
     if (status && status !== "all") whereClause.status = status;
     if (role && role !== "all") whereClause.role = role;

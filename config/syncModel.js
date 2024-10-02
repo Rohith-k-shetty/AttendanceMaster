@@ -3,6 +3,11 @@
 const sequelize = require("../config/db");
 const User = require("../models/user");
 const models = require("../models/index");
+const {
+  prepopulateSessions,
+  prepopulateYear,
+  insertSuperAdmin,
+} = require("../utils/functions");
 
 // Define an array of all your models
 const model = [User];
@@ -13,6 +18,9 @@ async function syncAllModels() {
     // Sync all models
     await sequelize.sync({ force: false }); // Set force to false to not drop tables
     console.log("All models synchronized successfully");
+    prepopulateSessions();
+    prepopulateYear();
+    insertSuperAdmin();
   } catch (error) {
     console.error("Error synchronizing models:", error);
   }

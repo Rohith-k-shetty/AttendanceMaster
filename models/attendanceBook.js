@@ -3,6 +3,7 @@ const sequelize = require("../config/db");
 const Department = require("./department");
 const Subject = require("./subject");
 const User = require("./user");
+const Course = require("./course");
 
 class AttendanceBook extends Model {}
 
@@ -41,6 +42,14 @@ AttendanceBook.init(
         key: "id",
       },
     },
+    courseId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: Course,
+        key: "id",
+      },
+    },
     status: {
       type: DataTypes.STRING,
       defaultValue: "Active",
@@ -70,4 +79,4 @@ AttendanceBook.init(
   }
 );
 
-module.exports = AttendanceBook;  
+module.exports = AttendanceBook;

@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const Session = require("../models/Session");
 const Year = require("../models/year");
+const { User } = require("../models");
 
 //Function to get the hashed password
 async function hashPassword(password) {
@@ -27,7 +28,7 @@ const generateToken = (user) => {
       user,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "10h", algorithm: "HS256" }
+    { expiresIn: "24h", algorithm: "HS256" }
   );
   return token;
 };
@@ -40,6 +41,8 @@ const prepopulateSessions = async () => {
     "Session 4",
     "Session 5",
     "Session 6",
+    "Session 7",
+    "Session 8",
   ];
   for (const sessionName of sessions) {
     await Session.findOrCreate({ where: { name: sessionName } });
@@ -60,11 +63,30 @@ const prepopulateYear = async () => {
   }
 };
 
-prepopulateSessions();
-prepopulateYear();
+const insertSuperAdmin = async () => {
+  const hashedPassword = await hashPassword("Welcome@123");
+  const superAdminData = {
+    name: "Super Admin",
+    username: "superadmin",
+    password: hashedPassword,
+    role: "SuperAdmin",
+    status: "Active",
+    email: "superadmin@example.com",
+    gender: "Male",
+  };
+
+  // Use findOrCreate to ensure the SuperAdmin isn't duplicated
+  await User.findOrCreate({
+    where: { username: superAdminData.username },
+    defaults: superAdminData,
+  });
+};
 
 module.exports = {
   hashPassword,
   generateUserId,
   generateToken,
+  prepopulateSessions,
+  prepopulateYear,
+  insertSuperAdmin,
 };
