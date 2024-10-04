@@ -51,12 +51,11 @@ AttendanceRecord.init(
     modelName: "AttendanceRecord",
     tableName: "tblAttendanceRecords",
     timestamps: true,
-    indexes: [
-      {
-        unique: true,
+    uniqueKeys: {
+      studentBookDateUnique: {
         fields: ["attendanceBookId", "studentId", "date", "sessionId"],
       },
-    ],
+    },
   }
 );
 

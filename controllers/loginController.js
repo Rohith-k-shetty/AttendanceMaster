@@ -18,14 +18,12 @@ const login = async (req, res) => {
         username: username,
         status: userStatus[0],
       },
-      include: [
-        { model: Department, as: "department" },
-        { model: Course, as: "course" },
-      ],
     });
 
     if (!user) {
-      return res.status(404).json(formatResponse(404, "User not found", false));
+      return res
+        .status(404)
+        .json(formatResponse(404, "Invalid Credentials", false));
     }
 
     // Validate password

@@ -3,6 +3,9 @@ const Subject = require("../models/subject");
 const formatResponse = require("../utils/response");
 const { userStatus } = require("../utils/constants");
 const { Op } = require("sequelize");
+const Course = require("../models/course");
+const Session = require("../models/session");
+const Year = require("../models/year");
 
 // vertical one - Department Controllers
 const createDepartment = async (req, res) => {
@@ -103,6 +106,34 @@ const getDepartmentById = async (req, res) => {
   }
   try {
     const department = await Department.findByPk(id);
+    if (!department) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Department not found", false));
+    }
+    return res
+      .status(200)
+      .json(
+        formatResponse(
+          200,
+          "Department retrived Successfully",
+          true,
+          department
+        )
+      );
+  } catch (error) {
+    console.error("Error while fetching departmnent:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to get department data", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
+const getAllDepartments = async (req, res) => {
+  try {
+    const department = await Department.findAll();
     if (!department) {
       return res
         .status(404)
@@ -344,6 +375,30 @@ const getSubjectById = async (req, res) => {
   }
 };
 
+//request to get a single user
+const getAllSubjects = async (req, res) => {
+  try {
+    const subject = await Subject.findAll();
+    if (!subject) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Subject not found", false));
+    }
+    return res
+      .status(200)
+      .json(
+        formatResponse(200, "Subject retrived Successfully", true, subject)
+      );
+  } catch (error) {
+    console.error("Error while fetching subject:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to get subject data", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
 const searchSubject = async (req, res) => {
   const { departmentId, status, subjectId } = req.query;
   try {
@@ -560,6 +615,28 @@ const getCourseById = async (req, res) => {
   }
 };
 
+// Retrieve course by ID
+const getAllCourses = async (req, res) => {
+  try {
+    const course = await Course.findAll();
+    if (!course) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Course not found", false));
+    }
+    return res
+      .status(200)
+      .json(formatResponse(200, "Course retrieved successfully", true, course));
+  } catch (error) {
+    console.error("Error fetching course:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to get course data", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
 // Search for courses based on query parameters
 const searchCourses = async (req, res) => {
   try {
@@ -641,12 +718,59 @@ const searchCoursesByRegex = async (req, res) => {
   }
 };
 
+//request to get all Session
+const getAllYears = async (req, res) => {
+  try {
+    const year = await Year.findAll();
+    if (!year) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Subject not found", false));
+    }
+    return res
+      .status(200)
+      .json(formatResponse(200, "Subject retrived Successfully", true, year));
+  } catch (error) {
+    console.error("Error while fetching subject:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to get subject data", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
+//request to get a single user
+const getAllSessions = async (req, res) => {
+  try {
+    const session = await Session.findAll();
+    if (!session) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Subject not found", false));
+    }
+    return res
+      .status(200)
+      .json(
+        formatResponse(200, "Subject retrived Successfully", true, session)
+      );
+  } catch (error) {
+    console.error("Error while fetching subject:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to get subject data", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
 module.exports = {
   createDepartment,
   deleteDepartment,
   updateDepartment,
   searchDepartments,
   getDepartmentById,
+  getAllDepartments,
   searchDepartmentsByRegex,
   createSubject,
   updateSubject,
@@ -654,10 +778,14 @@ module.exports = {
   searchSubject,
   searchSubjectsByRegx,
   getSubjectById,
+  getAllSubjects,
   createCourse,
   updateCourse,
   deleteCourse,
   getCourseById,
+  getAllCourses,
   searchCourses,
   searchCoursesByRegex,
+  getAllYears,
+  getAllSessions,
 };

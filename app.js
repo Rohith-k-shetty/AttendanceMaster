@@ -16,6 +16,8 @@ syncAllModels();
 //configuring the dot env files
 dotenv.config();
 
+//allow cross origin
+app.use(cors());
 //use the express for the request body
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

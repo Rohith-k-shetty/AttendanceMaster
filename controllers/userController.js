@@ -358,18 +358,18 @@ const getUser = async (req, res) => {
 // Controller for searching by optional username, phone, or name
 const getByNameOrPhone = async (req, res) => {
   try {
-    const { departmentId, courseId, searchTerm } = req.query; // extract departmentId and searchTerm from query params
-
+    const { departmentId, courseId, searchTerm, role } = req.query; // extract departmentId and searchTerm from query params
     // Construct the where condition dynamically based on the presence of departmentId and search term
     const whereCondition = {};
-
-    if (departmentId) {
+    if (departmentId && departmentId !== "All") {
       whereCondition.departmentId = parseInt(departmentId); // Ensure departmentId is an integer
     }
-    if (courseId) {
+    if (role && role !== "All") {
+      whereCondition.role = role; // Ensure departmentId is an integer
+    }
+    if (courseId && courseId !== "All") {
       whereCondition.courseId = parseInt(courseId); // Ensure departmentId is an integer
     }
-
     if (searchTerm) {
       // Use Op.or to search across username, phoneNo, and name
       whereCondition[Op.or] = [
