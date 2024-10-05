@@ -4,6 +4,9 @@ const User = require("../models/user");
 const { hashPassword } = require("../utils/functions");
 const { userStatus } = require("../utils/constants");
 const formatResponse = require("../utils/response");
+const Department = require("../models/department");
+const Course = require("../models/course");
+const Year = require("../models/year");
 
 // Function to create a user from user routes
 const createUser = async (req, res) => {
@@ -409,30 +412,54 @@ const getByNameOrPhone = async (req, res) => {
 };
 
 const searchUsersBySingleFields = async (req, res) => {
-  const { departmentId, courseId, yearId, status, role, userId } = req.query;
+  const {
+    departmentId,
+    courseId,
+    yearId,
+    status,
+    role,
+    userId,
+    limit,
+    offset,
+  } = req.query;
+
   try {
     // Build the where clause dynamically
     const whereClause = {};
     if (departmentId && departmentId !== "all")
       whereClause.departmentId = parseInt(departmentId);
-    if (courseId && departmentId !== "all")
+    if (courseId && courseId !== "all")
       whereClause.courseId = parseInt(courseId);
     if (yearId && yearId !== "all") whereClause.yearId = parseInt(yearId);
     if (status && status !== "all") whereClause.status = status;
     if (role && role !== "all") whereClause.role = role;
     if (userId && userId !== "all") whereClause.id = userId;
-    // Fetch users based on the dynamic where clause
+
+    // Convert limit and offset to integers, with defaults
+    const limitValue = parseInt(limit) || 10; // Default to 10 if not provided
+    const offsetValue = parseInt(offset) || 0; // Default to 0 if not provided
+
+    // Fetch total count of users matching the criteria
+    const totalCount = await User.count({ where: whereClause });
+
+    // Fetch users based on the dynamic where clause with pagination
     const users = await User.findAll({
       where: whereClause,
+      include: [
+        { model: Department, as: "department" },
+        { model: Course, as: "course" },
+        { model: Year, as: "year" },
+      ],
+      limit: limitValue,
+      offset: offsetValue,
     });
 
-    if (users.length === 0) {
-      return res.status(404).json(formatResponse(404, "No users found", false));
-    }
-
-    return res
-      .status(200)
-      .json(formatResponse(200, "Users retrieved successfully", true, users));
+    return res.status(200).json(
+      formatResponse(200, "Users retrieved successfully", true, {
+        users,
+        totalCount,
+      })
+    );
   } catch (error) {
     console.error("Error searching users:", error);
     return res.status(500).json(
