@@ -190,36 +190,39 @@ const bulkCreateUsers = async (req, res) => {
 };
 
 // Function to reset user password
-const resetUserPassword = async (userId, newPassword) => {
+const resetUserPassword = async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res
+      .status(400)
+      .json(formatResponse(400, "User ID is required", false));
+  }
   try {
-    // Validate inputs
-    if (!userId || !newPassword) {
-      return formatResponse(
-        400,
-        "User ID and new password are required.",
-        false
-      );
-    }
-
     // Hash the new password
-    const hashedPassword = await hashPassword(newPassword);
+    const hashedPassword = await hashPassword("Welcome@123");
+    // Find the user by ID
+    const user = await User.findByPk(id);
 
-    // Update the password for the user with the specified userId
-    const [affectedRows] = await User.update(
-      { password: hashedPassword },
-      { where: { id: userId } }
-    );
-
-    if (affectedRows === 0) {
-      return formatResponse(404, "User not found.", false);
+    if (!user) {
+      return res.status(404).json(formatResponse(404, "User not found", false));
     }
 
-    return formatResponse(200, "Password updated successfully.", true);
+    user.password = hashedPassword;
+    await user.save();
+
+    // Return a success response
+    return res
+      .status(200)
+      .json(
+        formatResponse(200, "User Password Reset successfully", true, user)
+      );
   } catch (error) {
-    console.error("Error resetting user password:", error);
-    return formatResponse(500, "Failed to reset password.", false, {
-      error: error.message,
-    });
+    console.error("Error reseting user:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to reset user password", false, {
+        error: error.message,
+      })
+    );
   }
 };
 

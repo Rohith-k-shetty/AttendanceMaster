@@ -12,6 +12,7 @@ const {
   getByNameOrPhone,
   searchUsersBySingleFields,
   searchUsersByArrayFields,
+  resetUserPassword,
 } = require("../controllers/userController");
 const { checkUserRole, findingUser } = require("../middleware/userMiddleware");
 const { verifyToken } = require("../middleware/tokenMiddleware");
@@ -23,6 +24,7 @@ router.post("/bulkUpload", verifyToken, bulkCreateUsers);
 //put reuest router
 router.put("/activate/:id", verifyToken, activateUser);
 router.put("/:id", verifyToken, updateUser);
+router.put("/reset-password/:id", verifyToken, resetUserPassword);
 
 //delete request router
 router.delete("/:id", verifyToken, deleteUser);
@@ -32,6 +34,5 @@ router.get("/:id", verifyToken, getUser);
 router.get("/search/byNameOrPhone", verifyToken, getByNameOrPhone);
 router.get("/search/singleFeilds", verifyToken, searchUsersBySingleFields);
 router.get("/search/arrayFeilds", verifyToken, searchUsersByArrayFields);
-
 
 module.exports = router;
