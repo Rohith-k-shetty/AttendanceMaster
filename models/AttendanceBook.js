@@ -1,9 +1,9 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/db");
-const Department = require("./department");
-const Subject = require("./subject");
-const User = require("./user");
-const Course = require("./course");
+const Department = require("./Department");
+const Subject = require("./Subject");
+const User = require("./User");
+const Course = require("./Course");
 
 class AttendanceBook extends Model {}
 

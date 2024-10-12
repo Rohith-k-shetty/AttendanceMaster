@@ -1,8 +1,8 @@
-const AttendanceBook = require("./AttendanceBook");
+const AttendanceBook = require("./AttendanceBook")
 const AttendanceBookStudent = require("./AttendanceBookStudent");
 const AttendanceBookTeacher = require("./AttendanceBookTeacher");
-const AttendanceRecord = require("./attendanceRecord");
-const User = require("./user");
+const AttendanceRecord = require("./AttendanceRecord");
+const User = require("./User");
 
 // Many-to-many relationship for teachers
 AttendanceBook.belongsToMany(User, {

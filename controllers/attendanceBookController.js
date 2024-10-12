@@ -1,13 +1,13 @@
 const sequelize = require("../config/db");
 const { Op } = require("sequelize");
-const User = require("../models/user");
+const { User } = require("../models/Index");
 const { bookStatus } = require("../utils/constants");
 const formatResponse = require("../utils/response");
-const AttendanceBook = require("../models/AttendanceBook");
-const Subject = require("../models/subject");
-const Department = require("../models/department");
-const { AttendanceBookStudent, AttendanceBookTeacher } = require("../models");
-const Course = require("../models/course");
+const { AttendanceBook } = require("../models/Index");
+const { Subject } = require("../models/Index");
+const { Department } = require("../models/Index");
+const { AttendanceBookStudent, AttendanceBookTeacher } = require("../models/Index");
+const { Course } = require("../models/Index");
 
 //create a attendance book
 const createAttendanceBook = async (req, res) => {

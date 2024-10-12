@@ -1,8 +1,8 @@
 // syncModels.js
 
 const sequelize = require("../config/db");
-const User = require("../models/user");
-const models = require("../models/index");
+const User = require("../models/User");
+const models = require("../models/Index");
 const {
   prepopulateSessions,
   prepopulateYear,

@@ -1,6 +1,6 @@
 const sequelize = require("../config/db");
 const { Op } = require("sequelize");
-const { AttendanceRecord } = require("../models");
+const AttendanceRecord = require("../models/AttendanceRecord");
 const { attendanceStatus } = require("../utils/constants");
 const formatResponse = require("../utils/response");
 

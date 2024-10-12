@@ -1,11 +1,11 @@
 const sequelize = require("../config/db");
-const User = require("../models/user");
+const User = require("../models/User");
 const { generateToken } = require("../utils/functions");
 const bcrypt = require("bcrypt");
 const { userStatus } = require("../utils/constants");
 const formatResponse = require("../utils/response");
-const Department = require("../models/department");
-const Course = require("../models/course");
+const Department = require("../models/Department");
+const Course = require("../models/Course");
 
 // Login function for the user
 const login = async (req, res) => {

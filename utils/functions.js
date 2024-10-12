@@ -2,8 +2,8 @@ const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const Session = require("../models/Session");
-const Year = require("../models/year");
-const { User } = require("../models");
+const Year = require("../models/Year");
+const User = require("../models/User");
 
 //Function to get the hashed password
 async function hashPassword(password) {

@@ -1,12 +1,12 @@
 const sequelize = require("../config/db");
 const { Op } = require("sequelize");
-const User = require("../models/user");
+const User = require("../models/User");
 const { hashPassword } = require("../utils/functions");
 const { userStatus, userRoles } = require("../utils/constants");
 const formatResponse = require("../utils/response");
-const Department = require("../models/department");
-const Course = require("../models/course");
-const Year = require("../models/year");
+const Department = require("../models/Department");
+const Course = require("../models/Course");
+const Year = require("../models/Year");
 
 // Function to create a user from user routes
 const createUser = async (req, res) => {

@@ -1,11 +1,11 @@
-const Department = require("../models/department");
-const Subject = require("../models/subject");
+const Department = require("../models/Department");
+const Subject = require("../models/Subject");
 const formatResponse = require("../utils/response");
 const { userStatus } = require("../utils/constants");
 const { Op } = require("sequelize");
-const Course = require("../models/course");
-const Session = require("../models/session");
-const Year = require("../models/year");
+const Course = require("../models/Course");
+const Session = require("../models/Session");
+const Year = require("../models/Year");
 
 // vertical one - Department Controllers
 const createDepartment = async (req, res) => {
