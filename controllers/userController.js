@@ -2,7 +2,7 @@ const sequelize = require("../config/db");
 const { Op } = require("sequelize");
 const User = require("../models/user");
 const { hashPassword } = require("../utils/functions");
-const { userStatus } = require("../utils/constants");
+const { userStatus, userRoles } = require("../utils/constants");
 const formatResponse = require("../utils/response");
 const Department = require("../models/department");
 const Course = require("../models/course");
@@ -27,15 +27,11 @@ const createUser = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!name || !username || !role || !yearId) {
+    if (!name || !username || !role || (role === userRoles[3] && !yearId)) {
       return res
         .status(400)
         .json(
-          formatResponse(
-            400,
-            "Name, username, year and role  are required",
-            false
-          )
+          formatResponse(400, "Name, username, and role  are required", false)
         );
     }
 
@@ -455,6 +451,10 @@ const searchUsersBySingleFields = async (req, res) => {
       ],
       limit: limitValue,
       offset: offsetValue,
+      order: [
+        ["name", "ASC"], // Sort by name in ascending order
+        ["username", "ASC"], // Sort by username in ascending order
+      ],
     });
 
     return res.status(200).json(

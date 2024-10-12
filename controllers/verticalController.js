@@ -254,16 +254,8 @@ const searchDepartmentsByRegex = async (req, res) => {
 
 //subject controller functions will start from here
 const createSubject = async (req, res) => {
-  const { subjectName, subjectCode, departmentId } = req.body;
+  const { subjectName, subjectCode } = req.body;
   try {
-    // Ensure the department exists
-    const department = await Department.findByPk(departmentId);
-    if (!department) {
-      return res
-        .status(404)
-        .json(formatResponse(404, "Department not found", false));
-    }
-
     // Check if the subject already exists
     const existingSubject = await Subject.findOne({
       where: { subjectCode: subjectCode.toUpperCase() },
@@ -277,7 +269,6 @@ const createSubject = async (req, res) => {
     const subject = await Subject.create({
       subjectName,
       subjectCode: subjectCode.toUpperCase(),
-      departmentId,
     });
     return res
       .status(201)
@@ -400,12 +391,9 @@ const getAllSubjects = async (req, res) => {
 };
 
 const searchSubject = async (req, res) => {
-  const { departmentId, status, subjectId } = req.query;
+  const { status, subjectId } = req.query;
   try {
     const whereClause = {};
-    if (departmentId) {
-      whereClause.departmentId = departmentId;
-    }
     if (status) {
       whereClause.status = status;
     }

@@ -1,6 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/db");
-const Department = require("./department");
 
 class Subject extends Model {}
 
@@ -19,15 +18,6 @@ Subject.init(
     subjectCode: {
       type: DataTypes.STRING,
       unique: true,
-      primaryKey: true,
-    },
-    departmentId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: Department,
-        key: "id",
-      },
     },
     status: {
       type: DataTypes.STRING,
@@ -40,6 +30,5 @@ Subject.init(
     tableName: "tblSubjects",
   }
 );
-Subject.belongsTo(Department, { foreignKey: "departmentId", as: "department" });
 
 module.exports = Subject;
