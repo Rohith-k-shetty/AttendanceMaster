@@ -1,9 +1,9 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/db");
 
-class Subject extends Model {}
+class Course extends Model {}
 
-Subject.init(
+Course.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -11,11 +11,11 @@ Subject.init(
       unique: true,
       autoIncrement: true,
     },
-    subjectName: {
+    courseName: {
       type: DataTypes.STRING,
       unique: true,
     },
-    subjectCode: {
+    courseCode: {
       type: DataTypes.STRING,
       unique: true,
     },
@@ -24,11 +24,12 @@ Subject.init(
       defaultValue: "Active",
     },
   },
+
   {
     sequelize,
-    modelName: "Subject",
-    tableName: "tblSubjects",
+    modelName: "Course",
+    tableName: "tblCourses",
   }
 );
 
-module.exports = Subject;
+module.exports = Course;

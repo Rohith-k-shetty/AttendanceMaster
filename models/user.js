@@ -2,6 +2,7 @@ const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/db.js");
 const Department = require("./department.js");
 const Year = require("./year.js");
+const Course = require("./course.js");
 class User extends Model {}
 
 User.init(
@@ -31,6 +32,14 @@ User.init(
     status: {
       type: DataTypes.STRING,
       defaultValue: "Active",
+    },
+    courseId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: Course,
+        key: "id",
+      },
     },
     departmentId: {
       type: DataTypes.INTEGER,
@@ -68,10 +77,10 @@ User.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    // gender: {
-    //   type: DataTypes.STRING,
-    //   allowNull: true,
-    // },
+    gender: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     parentEmail: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -88,6 +97,7 @@ User.init(
     timestamps: true,
   }
 );
+User.belongsTo(Course, { foreignKey: "courseId", as: "course" });
 User.belongsTo(Department, { foreignKey: "departmentId", as: "department" });
 User.belongsTo(Year, { foreignKey: "yearId", as: "year" });
 

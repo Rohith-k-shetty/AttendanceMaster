@@ -1,7 +1,8 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/db");
-const AttendanceBook = require("./attendanceBookModel");
-const User = require("./userModel");
+const AttendanceBook = require("./AttendanceBook");
+const User = require("./user");
+const Session = require("./Session");
 
 class AttendanceRecord extends Model {}
 
@@ -29,12 +30,16 @@ AttendanceRecord.init(
       },
     },
     date: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: false,
     },
-    session: {
-      type: DataTypes.ARRAY, 
+    sessionId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: Session,
+        key: "id",
+      },
     },
     status: {
       type: DataTypes.ENUM("Present", "Absent"),
@@ -46,6 +51,11 @@ AttendanceRecord.init(
     modelName: "AttendanceRecord",
     tableName: "tblAttendanceRecords",
     timestamps: true,
+    uniqueKeys: {
+      studentBookDateUnique: {
+        fields: ["attendanceBookId", "studentId", "date", "sessionId"],
+      },
+    },
   }
 );
 

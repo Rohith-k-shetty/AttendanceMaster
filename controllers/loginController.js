@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const { userStatus } = require("../utils/constants");
 const formatResponse = require("../utils/response");
 const Department = require("../models/department");
+const Course = require("../models/course");
 
 // Login function for the user
 const login = async (req, res) => {
@@ -17,11 +18,12 @@ const login = async (req, res) => {
         username: username,
         status: userStatus[0],
       },
-      include: [{ model: Department, as: "department" }],
     });
 
     if (!user) {
-      return res.status(404).json(formatResponse(404, "User not found", false));
+      return res
+        .status(404)
+        .json(formatResponse(404, "Invalid Credentials", false));
     }
 
     // Validate password

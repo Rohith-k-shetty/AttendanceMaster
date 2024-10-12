@@ -18,7 +18,6 @@ Department.init(
     departmentCode: {
       type: DataTypes.STRING,
       unique: true,
-      primaryKey: true,
     },
     status: {
       type: DataTypes.STRING,

@@ -2,8 +2,11 @@ const sequelize = require("../config/db");
 const { Op } = require("sequelize");
 const User = require("../models/user");
 const { hashPassword } = require("../utils/functions");
-const { userStatus } = require("../utils/constants");
+const { userStatus, userRoles } = require("../utils/constants");
 const formatResponse = require("../utils/response");
+const Department = require("../models/department");
+const Course = require("../models/course");
+const Year = require("../models/year");
 
 // Function to create a user from user routes
 const createUser = async (req, res) => {
@@ -18,19 +21,17 @@ const createUser = async (req, res) => {
       PhotoUrl,
       phoneNo,
       yearId,
+      courseId,
+      gender,
       parentPhone,
     } = req.body;
 
     // Validate required fields
-    if (!name || !username || !role || !yearId) {
+    if (!name || !username || !role || (role === userRoles[3] && !yearId)) {
       return res
         .status(400)
         .json(
-          formatResponse(
-            400,
-            "Name, username, year and role  are required",
-            false
-          )
+          formatResponse(400, "Name, username, and role  are required", false)
         );
     }
 
@@ -44,6 +45,8 @@ const createUser = async (req, res) => {
       role,
       status: userStatus[0],
       departmentId: departmentId || null,
+      courseId: courseId || null,
+      gender: gender || null,
       email: email || null,
       PhotoUrl: PhotoUrl || null,
       phoneNo: phoneNo || null,
@@ -119,6 +122,8 @@ const bulkCreateUsers = async (req, res) => {
         password: hashedPassword,
         status: "Active",
         departmentId: user.departmentId || null,
+        courseId: user.courseId || null,
+        gender: user.gender || null,
         email: user.email || null,
         PhotoUrl: user.PhotoUrl || null,
         phoneNo: user.phoneNo || null,
@@ -181,36 +186,39 @@ const bulkCreateUsers = async (req, res) => {
 };
 
 // Function to reset user password
-const resetUserPassword = async (userId, newPassword) => {
+const resetUserPassword = async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res
+      .status(400)
+      .json(formatResponse(400, "User ID is required", false));
+  }
   try {
-    // Validate inputs
-    if (!userId || !newPassword) {
-      return formatResponse(
-        400,
-        "User ID and new password are required.",
-        false
-      );
-    }
-
     // Hash the new password
-    const hashedPassword = await hashPassword(newPassword);
+    const hashedPassword = await hashPassword("Welcome@123");
+    // Find the user by ID
+    const user = await User.findByPk(id);
 
-    // Update the password for the user with the specified userId
-    const [affectedRows] = await User.update(
-      { password: hashedPassword },
-      { where: { id: userId } }
-    );
-
-    if (affectedRows === 0) {
-      return formatResponse(404, "User not found.", false);
+    if (!user) {
+      return res.status(404).json(formatResponse(404, "User not found", false));
     }
 
-    return formatResponse(200, "Password updated successfully.", true);
+    user.password = hashedPassword;
+    await user.save();
+
+    // Return a success response
+    return res
+      .status(200)
+      .json(
+        formatResponse(200, "User Password Reset successfully", true, user)
+      );
   } catch (error) {
-    console.error("Error resetting user password:", error);
-    return formatResponse(500, "Failed to reset password.", false, {
-      error: error.message,
-    });
+    console.error("Error reseting user:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to reset user password", false, {
+        error: error.message,
+      })
+    );
   }
 };
 
@@ -352,15 +360,18 @@ const getUser = async (req, res) => {
 // Controller for searching by optional username, phone, or name
 const getByNameOrPhone = async (req, res) => {
   try {
-    const { departmentId, searchTerm } = req.query; // extract departmentId and searchTerm from query params
-
+    const { departmentId, courseId, searchTerm, role } = req.query; // extract departmentId and searchTerm from query params
     // Construct the where condition dynamically based on the presence of departmentId and search term
     const whereCondition = {};
-
-    if (departmentId) {
+    if (departmentId && departmentId !== "All") {
       whereCondition.departmentId = parseInt(departmentId); // Ensure departmentId is an integer
     }
-
+    if (role && role !== "All") {
+      whereCondition.role = role; // Ensure departmentId is an integer
+    }
+    if (courseId && courseId !== "All") {
+      whereCondition.courseId = parseInt(courseId); // Ensure departmentId is an integer
+    }
     if (searchTerm) {
       // Use Op.or to search across username, phoneNo, and name
       whereCondition[Op.or] = [
@@ -386,7 +397,6 @@ const getByNameOrPhone = async (req, res) => {
           )
         );
     }
-
     return res
       .status(200)
       .json(formatResponse(200, "Users retrieved successfully", true, users));
@@ -401,27 +411,58 @@ const getByNameOrPhone = async (req, res) => {
 };
 
 const searchUsersBySingleFields = async (req, res) => {
-  const { departmentId, yearId, status, role } = req.query;
+  const {
+    departmentId,
+    courseId,
+    yearId,
+    status,
+    role,
+    userId,
+    limit,
+    offset,
+  } = req.query;
+
   try {
     // Build the where clause dynamically
     const whereClause = {};
     if (departmentId && departmentId !== "all")
       whereClause.departmentId = parseInt(departmentId);
+    if (courseId && courseId !== "all")
+      whereClause.courseId = parseInt(courseId);
     if (yearId && yearId !== "all") whereClause.yearId = parseInt(yearId);
     if (status && status !== "all") whereClause.status = status;
     if (role && role !== "all") whereClause.role = role;
-    // Fetch users based on the dynamic where clause
+    if (userId && userId !== "all") whereClause.id = userId;
+
+    // Convert limit and offset to integers, with defaults
+    const limitValue = parseInt(limit) || 10; // Default to 10 if not provided
+    const offsetValue = parseInt(offset) || 0; // Default to 0 if not provided
+
+    // Fetch total count of users matching the criteria
+    const totalCount = await User.count({ where: whereClause });
+
+    // Fetch users based on the dynamic where clause with pagination
     const users = await User.findAll({
       where: whereClause,
+      include: [
+        { model: Department, as: "department" },
+        { model: Course, as: "course" },
+        { model: Year, as: "year" },
+      ],
+      limit: limitValue,
+      offset: offsetValue,
+      order: [
+        ["name", "ASC"], // Sort by name in ascending order
+        ["username", "ASC"], // Sort by username in ascending order
+      ],
     });
 
-    if (users.length === 0) {
-      return res.status(404).json(formatResponse(404, "No users found", false));
-    }
-
-    return res
-      .status(200)
-      .json(formatResponse(200, "Users retrieved successfully", true, users));
+    return res.status(200).json(
+      formatResponse(200, "Users retrieved successfully", true, {
+        users,
+        totalCount,
+      })
+    );
   } catch (error) {
     console.error("Error searching users:", error);
     return res.status(500).json(
