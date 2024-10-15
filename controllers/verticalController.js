@@ -45,6 +45,45 @@ const createDepartment = async (req, res) => {
 };
 
 const updateDepartment = async (req, res) => {
+  const { id } = req.params; // User ID from URL parameters
+  const updates = req.body; // Fields to update from request body
+
+  if (!id) {
+    return res
+      .status(400)
+      .json(formatResponse(400, "Department ID is required", false));
+  }
+
+  try {
+    // Find the user by ID
+    const department = await Department.findByPk(id);
+
+    if (!department) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Department not found", false));
+    }
+
+    // Update only the fields that are provided in the request body
+    await department.update(updates);
+
+    // Return a success response
+    return res
+      .status(200)
+      .json(
+        formatResponse(200, "Department updated successfully", true, department)
+      );
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to update department", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
+const activeteDepartment = async (req, res) => {
   const { id } = req.params;
   try {
     const departmentId = parseInt(id);
@@ -162,34 +201,36 @@ const getAllDepartments = async (req, res) => {
 // Controller for searching Departments by specific fields
 const searchDepartments = async (req, res) => {
   try {
-    const { departmentName, departmentCode, status } = req.query;
+    const { id, status, limit, offset } = req.query;
+
     // Construct the where condition dynamically based on provided query params
     const whereCondition = {};
-    if (departmentName) whereCondition.departmentName = departmentName;
-    if (departmentCode) whereCondition.departmentCode = departmentCode;
     if (status) whereCondition.status = status;
-    const departments = await Department.findAll({ where: whereCondition });
-    if (!departments.length) {
-      return res
-        .status(404)
-        .json(
-          formatResponse(
-            404,
-            "No departments found matching the criteria",
-            false
-          )
-        );
-    }
-    return res
-      .status(200)
-      .json(
-        formatResponse(
-          200,
-          "Departments retrieved successfully",
-          true,
-          departments
-        )
-      );
+    if (id) whereCondition.id = id; // Fixed from whereClause to whereCondition
+
+    // Convert limit and offset to integers, with defaults
+    const limitValue = parseInt(limit, 10) || 10; // Default to 10 if not provided
+    const offsetValue = parseInt(offset, 10) || 0; // Default to 0 if not provided
+
+    // Fetch total count of departments matching the criteria
+    const totalCount = await Department.count({ where: whereCondition });
+
+    const departments = await Department.findAll({
+      where: whereCondition,
+      limit: limitValue,
+      offset: offsetValue,
+      order: [
+        ["departmentName", "ASC"], // Sort by department name in ascending order
+        ["departmentCode", "ASC"], // Sort by department code in ascending order
+      ],
+    });
+
+    return res.status(200).json(
+      formatResponse(200, "Departments retrieved successfully", true, {
+        departments,
+        totalCount,
+      })
+    );
   } catch (error) {
     console.error("Error searching departments:", error);
     return res.status(500).json(
@@ -214,7 +255,7 @@ const searchDepartmentsByRegex = async (req, res) => {
 
     if (searchTerm) {
       whereCondition[Op.or] = [
-        { departmentName: { [Op.iLike]: `%${searchTerm}%` } }, // Case-insensitive match
+        { departmentName: { [Op.iLike]: `%${searchTerm}%` } },
         { departmentCode: { [Op.iLike]: `%${searchTerm}%` } },
       ];
     }
@@ -284,6 +325,43 @@ const createSubject = async (req, res) => {
 };
 
 const updateSubject = async (req, res) => {
+  const { id } = req.params; // Subject ID from URL parameters
+  const updates = req.body; // Fields to update from request body
+
+  if (!id) {
+    return res
+      .status(400)
+      .json(formatResponse(400, "Subject ID is required", false));
+  }
+
+  try {
+    // Find the subject by ID
+    const subject = await Subject.findByPk(id);
+
+    if (!subject) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Subject not found", false));
+    }
+
+    // Update only the fields that are provided in the request body
+    await subject.update(updates);
+
+    // Return a success response
+    return res
+      .status(200)
+      .json(formatResponse(200, "Subject updated successfully", true, subject));
+  } catch (error) {
+    console.error("Error updating subject:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to update subject", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
+const activateSubject = async (req, res) => {
   const { id } = req.params;
   try {
     const subjectId = parseInt(id);
@@ -293,7 +371,7 @@ const updateSubject = async (req, res) => {
         .status(404)
         .json(formatResponse(404, "Subject not found", false));
     }
-    // Soft delete by setting the status to "Inactive"
+    // Soft delete by setting the status to "Active"
     subject.status = userStatus[0];
     await subject.save();
     return res
@@ -391,40 +469,47 @@ const getAllSubjects = async (req, res) => {
 };
 
 const searchSubject = async (req, res) => {
-  const { status, subjectId } = req.query;
+  const { status, id, limit, offset } = req.query;
+
   try {
-    const whereClause = {};
+    // Construct dynamic where condition based on the query params
+    const whereCondition = {};
     if (status) {
-      whereClause.status = status;
+      whereCondition.status = status;
     }
-    if (subjectId) {
-      whereClause.id = subjectId;
+    if (id) {
+      whereCondition.id = id;
     }
-    // Find subjects with the dynamic where clause
+
+    // Convert limit and offset to integers, with defaults
+    const limitValue = parseInt(limit, 10) || 10; // Default to 10 if not provided
+    const offsetValue = parseInt(offset, 10) || 0; // Default to 0 if not provided
+
+    // Fetch total count of subjects matching the criteria
+    const totalCount = await Subject.count({ where: whereCondition });
+
+    // Fetch the subjects with the dynamic where condition and pagination
     const subjects = await Subject.findAll({
-      where: whereClause,
+      where: whereCondition,
       include: [{ model: Department, as: "department" }],
+      limit: limitValue,
+      offset: offsetValue,
+      order: [
+        ["subjectName", "ASC"],
+        [subjectCode, "Asc"],
+      ], // Sort by subject name in ascending order
     });
 
-    if (!subjects.length) {
-      return res
-        .status(404)
-        .json(
-          formatResponse(
-            404,
-            "No subjects found matching the provided criteria",
-            false
-          )
-        );
-    }
-
-    return res
-      .status(200)
-      .json(
-        formatResponse(200, "Subjects retrieved successfully", true, subjects)
-      );
+    // Return successful response with retrieved subjects
+    return res.status(200).json(
+      formatResponse(200, "Subjects retrieved successfully", true, {
+        subjects,
+        totalCount,
+      })
+    );
   } catch (error) {
     console.error("Error fetching subjects:", error);
+    // Return error response in case of failure
     return res.status(500).json(
       formatResponse(500, "Failed to fetch subjects", false, {
         error: error.message,
@@ -515,8 +600,45 @@ const createCourse = async (req, res) => {
   }
 };
 
-// Update the status of a course (activate)
 const updateCourse = async (req, res) => {
+  const { id } = req.params; // Course ID from URL parameters
+  const updates = req.body; // Fields to update from request body
+
+  if (!id) {
+    return res
+      .status(400)
+      .json(formatResponse(400, "Course ID is required", false));
+  }
+
+  try {
+    // Find the course by ID
+    const course = await Course.findByPk(id);
+
+    if (!course) {
+      return res
+        .status(404)
+        .json(formatResponse(404, "Course not found", false));
+    }
+
+    // Update only the fields that are provided in the request body
+    await course.update(updates);
+
+    // Return a success response
+    return res
+      .status(200)
+      .json(formatResponse(200, "Course updated successfully", true, course));
+  } catch (error) {
+    console.error("Error updating course:", error);
+    return res.status(500).json(
+      formatResponse(500, "Failed to update course", false, {
+        error: error.message,
+      })
+    );
+  }
+};
+
+// Update the status of a course (activate)
+const activateCourse = async (req, res) => {
   const { id } = req.params;
   try {
     const courseId = parseInt(id);
@@ -528,7 +650,7 @@ const updateCourse = async (req, res) => {
     }
 
     // Update the course status (activate it)
-    await course.update({ status: "Active" });
+    await course.update({ status: userStatus[0] });
     return res
       .status(200)
       .json(formatResponse(200, "Course activated successfully", true));
@@ -555,7 +677,7 @@ const deleteCourse = async (req, res) => {
     }
 
     // Soft delete by setting status to "Inactive"
-    await course.update({ status: "Inactive" });
+    await course.update({ status: userStatus[1] });
     return res
       .status(200)
       .json(
@@ -624,33 +746,44 @@ const getAllCourses = async (req, res) => {
     );
   }
 };
-
 // Search for courses based on query parameters
 const searchCourses = async (req, res) => {
   try {
-    const { courseName, courseCode, status } = req.query;
+    const { id, status, limit, offset } = req.query;
+
     // Construct the where condition dynamically based on provided query params
     const whereCondition = {};
-    if (courseName) whereCondition.courseName = courseName;
-    if (courseCode) whereCondition.courseCode = courseCode;
+    if (id) whereCondition.id = id;
     if (status) whereCondition.status = status;
 
-    const courses = await Course.findAll({ where: whereCondition });
-    if (!courses.length) {
-      return res
-        .status(404)
-        .json(
-          formatResponse(404, "No courses found matching the criteria", false)
-        );
-    }
+    // Convert limit and offset to integers, with defaults
+    const limitValue = parseInt(limit, 10) || 10; // Default to 10 if not provided
+    const offsetValue = parseInt(offset, 10) || 0; // Default to 0 if not provided
 
-    return res
-      .status(200)
-      .json(
-        formatResponse(200, "Courses retrieved successfully", true, courses)
-      );
+    // Fetch total count of courses matching the criteria
+    const totalCount = await Course.count({ where: whereCondition });
+
+    // Fetch courses with dynamic where condition and pagination
+    const courses = await Course.findAll({
+      where: whereCondition,
+      limit: limitValue,
+      offset: offsetValue,
+      order: [
+        ["courseName", "ASC"], // Sort by course name in ascending order
+        ["courseCode", "ASC"], // Sort by course code in ascending order
+      ],
+    });
+
+    // Return successful response with retrieved courses and total count
+    return res.status(200).json(
+      formatResponse(200, "Courses retrieved successfully", true, {
+        courses,
+        totalCount,
+      })
+    );
   } catch (error) {
     console.error("Error searching courses:", error);
+    // Return error response in case of failure
     return res.status(500).json(
       formatResponse(500, "Failed to search courses", false, {
         error: error.message,
@@ -756,12 +889,14 @@ module.exports = {
   createDepartment,
   deleteDepartment,
   updateDepartment,
+  activeteDepartment,
   searchDepartments,
   getDepartmentById,
   getAllDepartments,
   searchDepartmentsByRegex,
   createSubject,
   updateSubject,
+  activateSubject,
   deleteSubject,
   searchSubject,
   searchSubjectsByRegx,
@@ -769,6 +904,7 @@ module.exports = {
   getAllSubjects,
   createCourse,
   updateCourse,
+  activateCourse,
   deleteCourse,
   getCourseById,
   getAllCourses,

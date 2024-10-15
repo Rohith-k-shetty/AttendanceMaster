@@ -6,7 +6,10 @@ const formatResponse = require("../utils/response");
 const { AttendanceBook } = require("../models/Index");
 const { Subject } = require("../models/Index");
 const { Department } = require("../models/Index");
-const { AttendanceBookStudent, AttendanceBookTeacher } = require("../models/Index");
+const {
+  AttendanceBookStudent,
+  AttendanceBookTeacher,
+} = require("../models/Index");
 const { Course } = require("../models/Index");
 
 //create a attendance book
