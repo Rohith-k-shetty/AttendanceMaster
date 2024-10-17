@@ -56,7 +56,7 @@ router.delete("/course/:id", verifyToken, deleteCourse);
 router.put("/course/:id", verifyToken, updateCourse);
 router.put("/course/activate/:id", verifyToken, activateCourse);
 router.get("/course/search", verifyToken, searchCourses);
-router.get("/course/searchByRegex", verifyToken, searchCoursesByRegex);
+router.get("/course/searchByregx", verifyToken, searchCoursesByRegex);
 router.get("/course/getById/:id", verifyToken, getCourseById);
 router.get("/course/getAll", verifyToken, getAllCourses);
 

@@ -491,12 +491,11 @@ const searchSubject = async (req, res) => {
     // Fetch the subjects with the dynamic where condition and pagination
     const subjects = await Subject.findAll({
       where: whereCondition,
-      include: [{ model: Department, as: "department" }],
       limit: limitValue,
       offset: offsetValue,
       order: [
         ["subjectName", "ASC"],
-        [subjectCode, "Asc"],
+        ["subjectCode", "Asc"],
       ], // Sort by subject name in ascending order
     });
 
@@ -520,11 +519,8 @@ const searchSubject = async (req, res) => {
 
 const searchSubjectsByRegx = async (req, res) => {
   try {
-    const { departmentId, searchTerm } = req.query;
+    const { searchTerm } = req.query;
     const whereCondition = {};
-    if (departmentId) {
-      whereCondition.departmentId = parseInt(departmentId);
-    }
     if (searchTerm) {
       whereCondition[Op.or] = [
         { subjectCode: { [Op.iLike]: `%${searchTerm}%` } },
@@ -533,20 +529,8 @@ const searchSubjectsByRegx = async (req, res) => {
     }
     const subjects = await Subject.findAll({
       where: whereCondition,
-      include: [{ model: Department, as: "department" }],
     });
 
-    if (!subjects.length) {
-      return res
-        .status(404)
-        .json(
-          formatResponse(
-            404,
-            "No subjects found matching the search term",
-            false
-          )
-        );
-    }
     return res
       .status(200)
       .json(
@@ -813,17 +797,6 @@ const searchCoursesByRegex = async (req, res) => {
 
     const courses = await Course.findAll({ where: whereCondition });
 
-    if (!courses.length) {
-      return res
-        .status(404)
-        .json(
-          formatResponse(
-            404,
-            "No courses found matching the search term",
-            false
-          )
-        );
-    }
     return res
       .status(200)
       .json(
